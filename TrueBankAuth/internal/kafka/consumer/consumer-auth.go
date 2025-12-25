@@ -13,7 +13,7 @@ import (
 func GetMessageAuth(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:     []string{"localhost:9092"},
-		Topic:       "auth",
+		Topic:       "server",
 		StartOffset: kafka.LastOffset,
 	})
 

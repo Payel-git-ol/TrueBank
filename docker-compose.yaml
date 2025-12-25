@@ -26,9 +26,9 @@ services:
 
   postgres-auth:
     image: postgres:15
-    container_name: postgres-auth
+    container_name: postgres-server
     environment:
-      POSTGRES_USER: true-auth
+      POSTGRES_USER: true-server
       POSTGRES_PASSWORD: true123
       POSTGRES_DB: true_db_auth
     ports:

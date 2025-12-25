@@ -65,7 +65,7 @@ func main() {
 		}
 
 		topic_init.InitTopic()
-		if err := producer.SendMessageAuth("auth", user); err != nil {
+		if err := producer.SendMessageAuth("server", user); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 

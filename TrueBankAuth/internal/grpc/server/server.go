@@ -1,9 +1,12 @@
-package auth
+package server
 
 import (
 	"context"
+	"google.golang.org/grpc"
+	"log"
 
 	"TrueBankAuth/internal/grpc/authpb"
+	"TrueBankAuth/internal/grpc/userservicepb"
 	"TrueBankAuth/internal/service"
 	"TrueBankAuth/pkg/models"
 )
@@ -21,6 +24,8 @@ func (s *AuthServer) Registration(ctx context.Context, req *authpb.UserRequest) 
 	}
 
 	service.RegService(r)
+
+	sendToUserService(r)
 
 	return &authpb.AuthResponse{
 		Status:  "Success",
@@ -48,4 +53,30 @@ func (s *AuthServer) Authentication(ctx context.Context, req *authpb.UserRequest
 		Status:  "Success",
 		Message: msg,
 	}, nil
+}
+
+func sendToUserService(user models.RequestUser) {
+	conn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
+	if err != nil {
+		log.Printf("failed to connect to UserService: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	client := userservicepb.NewUserServiceClient(conn)
+
+	req := &userservicepb.NewUserRequest{
+		Username: user.Username,
+		Email:    user.Email,
+		Password: user.Password,
+		Balance:  user.Balance,
+	}
+
+	resp, err := client.CreateUser(context.Background(), req)
+	if err != nil {
+		log.Printf("error calling UserService: %v", err)
+		return
+	}
+
+	log.Printf("UserService response: %s, %s, ID=%d", resp.Status, resp.Message, resp.UserId)
 }

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package userservice;
+
+option go_package = "internal/grpc/userservicepb;userservicepb";
+
+message NewUserRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  double balance = 4;
+}
+
+message NewUserResponse {
+  string status = 1;
+  string message = 2;
+  int64 user_id = 3;
+}
+
+service UserService {
+  rpc CreateUser(NewUserRequest) returns (NewUserResponse);
+}

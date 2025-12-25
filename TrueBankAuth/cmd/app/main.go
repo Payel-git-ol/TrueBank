@@ -1,8 +1,8 @@
 package main
 
 import (
-	"TrueBankAuth/internal/grpc/auth"
 	"TrueBankAuth/internal/grpc/authpb"
+	"TrueBankAuth/internal/grpc/server"
 	"TrueBankAuth/internal/kafka/consumer"
 	"TrueBankAuth/pkg/database"
 	"github.com/gin-gonic/gin"
@@ -26,7 +26,7 @@ func main() {
 			log.Fatalf("failed to listen: %v", err)
 		}
 		grpcServer := grpc.NewServer()
-		authpb.RegisterAuthServiceServer(grpcServer, &auth.AuthServer{})
+		authpb.RegisterAuthServiceServer(grpcServer, &server.AuthServer{})
 		log.Println("gRPC server started on :50051")
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
