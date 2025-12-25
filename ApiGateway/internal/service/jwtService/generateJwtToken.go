@@ -10,6 +10,10 @@ func UserServiceRegister(user models.User) (string, error) {
 		return "Error: ", err
 	}
 
-	generateToken(user.Username, user.Email, jwtKey)
-	return "Success", err
+	result, err := generateToken(user.Username, user.Email, jwtKey)
+	if err != nil {
+		return "Error: ", err
+	}
+
+	return "Success" + result, err
 }

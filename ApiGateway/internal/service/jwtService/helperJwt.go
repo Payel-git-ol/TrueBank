@@ -7,12 +7,10 @@ import (
 )
 
 func getJwtKey() ([]byte, error) {
-	jwtKey := []byte(os.Getenv("JWT_TOKEN"))
-
+	jwtKey := []byte(os.Getenv("JWT_SECRET"))
 	if len(jwtKey) == 0 {
-		return nil, errors.New("jwt token is empty")
+		return nil, errors.New("jwt secret is empty")
 	}
-
 	return jwtKey, nil
 }
 
