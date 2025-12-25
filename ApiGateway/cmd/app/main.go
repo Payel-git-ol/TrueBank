@@ -7,8 +7,10 @@ import (
 	"ApiGateway/internal/kafka/topic-generate/topic_init"
 	"ApiGateway/internal/service/jwtService"
 	"ApiGateway/pkg/models"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -89,9 +91,28 @@ func main() {
 		})
 	})
 
-	r.GET("/profile/:id}", func(c *gin.Context) {
-		//idParam := c.Param("id")
+	r.GET("/profile/:username", func(c *gin.Context) {
+		username := c.Param("username")
 
+		resp, err := http.Get("http://localhost:5050/search/profile/user/" + username)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+
+		body, _ := ioutil.ReadAll(resp.Body)
+
+		var userResp models.UserResponse
+		if err := json.Unmarshal(body, &userResp); err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"status": resp.Status,
+			"user":   userResp.User,
+		})
 	})
 
 	r.Run(":8080")

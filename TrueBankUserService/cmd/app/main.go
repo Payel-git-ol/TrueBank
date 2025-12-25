@@ -3,6 +3,8 @@ package main
 import (
 	"TrueBankUserService/internal/grpc/server"
 	"TrueBankUserService/internal/grpc/userservicepb"
+	"TrueBankUserService/internal/service"
+	"TrueBankUserService/pkg/cache"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"log"
@@ -10,6 +12,7 @@ import (
 )
 
 func main() {
+	cache.InitRedis()
 
 	go func() {
 		lis, err := net.Listen("tcp", ":50052")
@@ -31,6 +34,22 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "hello world",
+		})
+	})
+
+	r.GET("/search/profile/user/:username", func(c *gin.Context) {
+		username := c.Param("username")
+
+		cash, err := service.GetUserInCash(username)
+		if err != nil {
+			c.JSON(404, gin.H{
+				"message": "user not found in cache",
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"User": cash,
 		})
 	})
 
