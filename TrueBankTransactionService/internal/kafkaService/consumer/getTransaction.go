@@ -1,13 +1,15 @@
 package consumer
 
 import (
+	"TrueBankTransactionService/internal/kafkaService/message"
 	"TrueBankTransactionService/internal/service"
-	"TrueBankTransactionService/pkg/message"
+	"TrueBankTransactionService/pkg/models/dbModels"
 	"context"
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
 	"sync"
+	"time"
 )
 
 func GetTransaction(wg *sync.WaitGroup) {
@@ -31,6 +33,14 @@ func GetTransaction(wg *sync.WaitGroup) {
 
 		fmt.Println(messageResult)
 
-		service.CreateTransaction(messageResult)
+		newTransaction := dbModels.HistoryTransaction{
+			Username:        messageResult.Username,
+			NameTransaction: messageResult.NameTransaction,
+			Sum:             messageResult.Sum,
+			NumberCard:      messageResult.NumberCard,
+			DateCreated:     time.Now(),
+		}
+
+		service.CreateTransaction(newTransaction)
 	}
 }

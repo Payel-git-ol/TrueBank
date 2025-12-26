@@ -92,6 +92,23 @@ func main() {
 		})
 	})
 
+	r.POST("/auth/cardNumber", func(c *gin.Context) {
+		var authCardNumber models.AuthCardNumber
+		if err := c.ShouldBindJSON(&authCardNumber); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+		}
+
+		err := producer.SendMessageAuthCardNumber("auth-card-number", authCardNumber)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+		}
+
+		c.JSON(200, gin.H{
+			"status":  200,
+			"message": "success",
+		})
+	})
+
 	r.GET("/profile/:username", func(c *gin.Context) {
 		username := c.Param("username")
 
@@ -125,7 +142,10 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		service.CreateTransaction(transaction, name)
+		err := service.CreateTransaction(transaction, name)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+		}
 	})
 
 	r.POST("/payment/reg", func(c *gin.Context) {
@@ -135,7 +155,15 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		service.TransactionReg(regTransaction)
+		err := service.TransactionReg(regTransaction)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+		}
+
+		c.JSON(200, gin.H{
+			"status":  200,
+			"message": "success",
+		})
 	})
 
 	r.Run(":8080")

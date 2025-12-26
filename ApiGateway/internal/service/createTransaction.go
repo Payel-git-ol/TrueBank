@@ -3,10 +3,9 @@ package service
 import (
 	"ApiGateway/internal/kafkaService/producer"
 	"ApiGateway/pkg/models"
-	"log"
 )
 
-func CreateTransaction(data models.TransactionRequest, nameTransaction string) {
+func CreateTransaction(data models.TransactionRequest, nameTransaction string) error {
 	transaction := models.Transaction{
 		Username:        data.Username,
 		NameTransaction: nameTransaction,
@@ -16,6 +15,8 @@ func CreateTransaction(data models.TransactionRequest, nameTransaction string) {
 
 	err := producer.SendTransaction("create-transaction", transaction)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
+
+	return nil
 }

@@ -3,16 +3,25 @@ package main
 import (
 	"TrueBankUserService/internal/grpc/server"
 	"TrueBankUserService/internal/grpc/userservicepb"
+	"TrueBankUserService/internal/kafka/consumer"
 	"TrueBankUserService/internal/service"
 	"TrueBankUserService/pkg/cache"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"sync"
 )
 
 func main() {
 	cache.InitRedis()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go consumer.GetResultTransaction(&wg)
+	go consumer.GetAuthCardNumber(&wg)
+
+	service.TestAddBalance("Pavel", 1500)
 
 	go func() {
 		lis, err := net.Listen("tcp", ":50052")

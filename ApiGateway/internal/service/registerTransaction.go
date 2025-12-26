@@ -5,7 +5,7 @@ import (
 	"ApiGateway/pkg/models"
 )
 
-func TransactionReg(data models.RegTransaction) {
+func TransactionReg(data models.RegTransaction) error {
 	regTransaction := models.RegTransaction{
 		Name:                             data.Name,
 		Description:                      data.Description,
@@ -14,5 +14,10 @@ func TransactionReg(data models.RegTransaction) {
 		LinkToIndividualEntrepreneurship: data.LinkToIndividualEntrepreneurship,
 	}
 
-	producer.SendTransactionReg("transaction-reg", regTransaction)
+	err := producer.SendTransactionReg("transaction-reg", regTransaction)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

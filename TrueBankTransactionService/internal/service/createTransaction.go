@@ -1,20 +1,24 @@
 package service
 
 import (
+	"TrueBankTransactionService/internal/kafkaService/producer"
 	"TrueBankTransactionService/pkg/database"
 	"TrueBankTransactionService/pkg/models/dbModels"
-	"TrueBankTransactionService/pkg/models/requestModels"
-	"time"
+	"strconv"
 )
 
-func CreateTransaction(data requestModels.TransactionRequest) {
-	newTransaction := dbModels.HistoryTransaction{
-		Username:        data.Username,
-		NameTransaction: data.NameTransaction,
-		Sum:             data.Sum,
-		NumberCard:      data.NumberCard,
-		DateCreated:     time.Now(),
+func CreateTransaction(newTransaction dbModels.HistoryTransaction) error {
+	database.Db.Create(&newTransaction)
+
+	sumFloat, err := strconv.ParseFloat(newTransaction.Sum, 64)
+	if err != nil {
+		return err
 	}
 
-	database.Db.Create(&newTransaction)
+	err = producer.SendMessageTransaction("result-transaction", sumFloat, newTransaction.NumberCard, newTransaction.Username)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

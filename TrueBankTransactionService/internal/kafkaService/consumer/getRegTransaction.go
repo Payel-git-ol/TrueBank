@@ -1,8 +1,8 @@
 package consumer
 
 import (
+	"TrueBankTransactionService/internal/kafkaService/message"
 	"TrueBankTransactionService/internal/service"
-	"TrueBankTransactionService/pkg/message"
 	"context"
 	"fmt"
 	"github.com/segmentio/kafka-go"
