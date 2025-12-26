@@ -3,8 +3,9 @@ package main
 import (
 	"ApiGateway/internal/grpc/auth"
 	"ApiGateway/internal/grpc/authpb"
-	"ApiGateway/internal/kafka/producer"
-	"ApiGateway/internal/kafka/topic-generate/topic_init"
+	"ApiGateway/internal/kafkaService/producer"
+	"ApiGateway/internal/kafkaService/topic-generate/topic_init"
+	"ApiGateway/internal/service"
 	"ApiGateway/internal/service/jwtService"
 	"ApiGateway/pkg/models"
 	"encoding/json"
@@ -113,6 +114,28 @@ func main() {
 			"status": resp.Status,
 			"user":   userResp.User,
 		})
+	})
+
+	r.POST("/payment/service/:name", func(c *gin.Context) {
+		name := c.Param("name")
+
+		var transaction models.TransactionRequest
+
+		if err := c.ShouldBindJSON(&transaction); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		service.CreateTransaction(transaction, name)
+	})
+
+	r.POST("/payment/reg", func(c *gin.Context) {
+		var regTransaction models.RegTransaction
+
+		if err := c.ShouldBindJSON(&regTransaction); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		service.TransactionReg(regTransaction)
 	})
 
 	r.Run(":8080")

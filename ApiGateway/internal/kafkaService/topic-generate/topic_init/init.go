@@ -1,7 +1,7 @@
 package topic_init
 
 import (
-	topic_generate "ApiGateway/internal/kafka/topic-generate"
+	topic_generate "ApiGateway/internal/kafkaService/topic-generate"
 	"log"
 )
 
