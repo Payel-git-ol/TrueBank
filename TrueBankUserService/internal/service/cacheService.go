@@ -3,10 +3,9 @@ package service
 import (
 	"TrueBankUserService/pkg/cache"
 	"TrueBankUserService/pkg/models"
-	"strconv"
 )
 
-func SaveUserInCash(user models.User) error {
+func SaveUserInCache(user models.User) error {
 	err := cache.SaveUser(user)
 	if err != nil {
 		return err
@@ -15,7 +14,7 @@ func SaveUserInCash(user models.User) error {
 	return nil
 }
 
-func GetUserInCash(key string) (*models.User, error) {
+func GetUserInCache(key string) (*models.User, error) {
 	get, err := cache.GetUser(key)
 	if err != nil {
 		return nil, err
@@ -30,10 +29,8 @@ func GetUserInCash(key string) (*models.User, error) {
 	return user, nil
 }
 
-func AuthCardNumber(username string, cardNumber string) error {
-	cardNumberInt, _ := strconv.Atoi(cardNumber)
-
-	err := cache.AuthCardNumber(username, cardNumberInt)
+func AuthCardNumberInCache(username string, cardNumber int) error {
+	err := cache.AuthCardNumber(username, cardNumber)
 	if err != nil {
 		return err
 	}
@@ -41,8 +38,8 @@ func AuthCardNumber(username string, cardNumber string) error {
 	return nil
 }
 
-func UpdateUserInCash(CardNumber string, subtractAmount float64) error {
-	err := cache.UpdateUser(CardNumber, subtractAmount)
+func UpdateUserInCacheTransaction(CardNumber string, subtractAmount float64) error {
+	err := cache.UpdateUserTransaction(CardNumber, subtractAmount)
 	if err != nil {
 		return err
 	}
@@ -50,8 +47,17 @@ func UpdateUserInCash(CardNumber string, subtractAmount float64) error {
 	return nil
 }
 
-func TestAddBalance(username string, amount float64) error {
+func TestAddBalanceInCache(username string, amount float64) error {
 	err := cache.AddBalance(username, amount)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateUserInCacheRemittance(username string, SenderСardNumber string, GetterCardNumber string, amount float64) error {
+	err := cache.UpdateUserRemittance(username, SenderСardNumber, GetterCardNumber, amount)
 	if err != nil {
 		return err
 	}

@@ -12,9 +12,9 @@ import (
 
 func GetMessageReg(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:     []string{"localhost:9092"},
-		Topic:       "register",
-		StartOffset: kafka.LastOffset,
+		Brokers: []string{"localhost:9092"},
+		Topic:   "register",
+		GroupID: "auth-reg-consumer",
 	})
 
 	defer r.Close()

@@ -1,4 +1,4 @@
-package models
+package request
 
 type TransactionRequest struct {
 	Username   string `json:"username"`

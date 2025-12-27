@@ -20,8 +20,7 @@ func main() {
 	wg.Add(1)
 	go consumer.GetResultTransaction(&wg)
 	go consumer.GetAuthCardNumber(&wg)
-
-	service.TestAddBalance("Pavel", 1500)
+	go consumer.GetResultRemittance(&wg)
 
 	go func() {
 		lis, err := net.Listen("tcp", ":50052")
@@ -49,7 +48,7 @@ func main() {
 	r.GET("/search/profile/user/:username", func(c *gin.Context) {
 		username := c.Param("username")
 
-		cash, err := service.GetUserInCash(username)
+		cash, err := service.GetUserInCache(username)
 		if err != nil {
 			c.JSON(404, gin.H{
 				"message": "user not found in cache",

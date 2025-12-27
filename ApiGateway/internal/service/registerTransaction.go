@@ -1,12 +1,12 @@
 package service
 
 import (
-	"ApiGateway/internal/kafkaService/producer"
-	"ApiGateway/pkg/models"
+	"ApiGateway/internal/kafkaService/producer/producer_transaction"
+	"ApiGateway/pkg/models/transaction/reg"
 )
 
-func TransactionReg(data models.RegTransaction) error {
-	regTransaction := models.RegTransaction{
+func TransactionReg(data reg.RegTransaction) error {
+	regTransaction := reg.RegTransaction{
 		Name:                             data.Name,
 		Description:                      data.Description,
 		Company:                          data.Company,
@@ -14,7 +14,7 @@ func TransactionReg(data models.RegTransaction) error {
 		LinkToIndividualEntrepreneurship: data.LinkToIndividualEntrepreneurship,
 	}
 
-	err := producer.SendTransactionReg("transaction-reg", regTransaction)
+	err := producer_transaction.SendTransactionReg("transaction-reg", regTransaction)
 	if err != nil {
 		return err
 	}

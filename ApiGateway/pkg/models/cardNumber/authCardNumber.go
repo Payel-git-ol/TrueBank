@@ -1,4 +1,4 @@
-package models
+package cardNumber
 
 type AuthCardNumber struct {
 	Username   string `json:"username"`

@@ -21,7 +21,7 @@ func (s *UserServer) CreateUser(ctx context.Context, req *userservicepb.NewUserR
 		Balance:  req.Balance,
 	}
 
-	err := service.SaveUserInCash(user)
+	err := service.SaveUserInCache(user)
 	if err != nil {
 		log.Printf("Error saving user: %v", err)
 	}

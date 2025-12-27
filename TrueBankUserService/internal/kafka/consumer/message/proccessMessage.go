@@ -24,7 +24,17 @@ func ProcessMessageAuthCardNumber(data []byte) (models.AuthCardNumber, error) {
 
 	var res models.AuthCardNumber
 	if err := json.Unmarshal(data, &res); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+	}
+
+	return res, nil
+}
+
+func ProcessMessageResultRemittance(data []byte) (models.ResultRemittance, error) {
+	fmt.Println("Consumer started")
+	var res models.ResultRemittance
+	if err := json.Unmarshal(data, &res); err != nil {
+		log.Println(err)
 	}
 
 	return res, nil

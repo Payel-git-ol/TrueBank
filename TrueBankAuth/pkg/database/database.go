@@ -28,8 +28,10 @@ func InitDb() {
 
 	Db = db
 
-	if err := Db.AutoMigrate(&models.User{}); err != nil {
-		log.Fatal("migration failed:", err)
+	if os.Getenv("RUN_MIGRATION") == "true" {
+		if err := Db.AutoMigrate(&models.User{}); err != nil {
+			log.Fatal("migration failed:", err)
+		}
 	}
 
 	connectDB, err := Db.DB()

@@ -1,14 +1,14 @@
-package producer
+package producer_user
 
 import (
-	"ApiGateway/pkg/models"
+	"ApiGateway/pkg/models/user"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/segmentio/kafka-go"
 )
 
-func SendMessageInRegistretion(topic string, data models.User) error {
+func SendMessageAuth(topic string, data user.User) error {
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{"localhost:9092"},
 		Topic:   topic,
@@ -17,19 +17,16 @@ func SendMessageInRegistretion(topic string, data models.User) error {
 	defer w.Close()
 
 	jsonData, err := json.Marshal(data)
-	if err != nil {
-		panic(err)
-	}
-
 	err = w.WriteMessages(context.Background(),
 		kafka.Message{Value: jsonData},
 	)
 	if err != nil {
 		panic(err)
+		return err
 	}
 
 	//metrics.KafkaMessagesOut.Inc()
 
-	fmt.Printf("Отправлено в топик '%s': %v\n", topic, string(jsonData))
+	fmt.Printf("Отправлено в топик '%s': %v\n", topic, data)
 	return nil
 }

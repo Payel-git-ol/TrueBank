@@ -1,19 +1,20 @@
 package service
 
 import (
-	"ApiGateway/internal/kafkaService/producer"
-	"ApiGateway/pkg/models"
+	"ApiGateway/internal/kafkaService/producer/producer_transaction"
+	"ApiGateway/pkg/models/transaction"
+	"ApiGateway/pkg/models/transaction/request"
 )
 
-func CreateTransaction(data models.TransactionRequest, nameTransaction string) error {
-	transaction := models.Transaction{
+func CreateTransaction(data request.TransactionRequest, nameTransaction string) error {
+	transaction := transaction.Transaction{
 		Username:        data.Username,
 		NameTransaction: nameTransaction,
 		Sum:             data.Sum,
 		NumberCard:      data.NumberCard,
 	}
 
-	err := producer.SendTransaction("create-transaction", transaction)
+	err := producer_transaction.SendTransaction("create-transaction", transaction)
 	if err != nil {
 		return err
 	}

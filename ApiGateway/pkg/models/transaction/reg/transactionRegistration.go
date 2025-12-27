@@ -1,4 +1,4 @@
-package models
+package reg
 
 type RegTransaction struct {
 	Name                             string `json:"name"`

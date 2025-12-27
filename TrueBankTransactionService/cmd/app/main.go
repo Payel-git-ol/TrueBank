@@ -16,6 +16,8 @@ func main() {
 	wg.Add(1)
 	go consumer.GetTransaction(&wg)
 	go consumer.GetRegTransaction(&wg)
+	go consumer.GetMessageRemittance(&wg)
+
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "hello world",

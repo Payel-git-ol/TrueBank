@@ -1,4 +1,4 @@
-package models
+package request
 
 type SearchUser struct {
 	Username string `json:"username"`

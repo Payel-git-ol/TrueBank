@@ -1,14 +1,14 @@
-package producer
+package producer_transaction
 
 import (
-	"ApiGateway/pkg/models"
+	"ApiGateway/pkg/models/transaction"
 	"context"
 	"encoding/json"
 	"github.com/segmentio/kafka-go"
 	"log"
 )
 
-func SendTransaction(topic string, data models.Transaction) error {
+func SendTransaction(topic string, data transaction.Transaction) error {
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{"localhost:9092"},
 		Topic:   topic,

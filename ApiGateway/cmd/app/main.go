@@ -3,11 +3,17 @@ package main
 import (
 	"ApiGateway/internal/grpc/auth"
 	"ApiGateway/internal/grpc/authpb"
-	"ApiGateway/internal/kafkaService/producer"
-	"ApiGateway/internal/kafkaService/topic-generate/topic_init"
+	"ApiGateway/internal/kafkaService/producer/producer_auth_cardnumber"
+	"ApiGateway/internal/kafkaService/producer/producer_user"
+	"ApiGateway/internal/kafkaService/producer/producer_user/producer_user_remittance"
 	"ApiGateway/internal/service"
 	"ApiGateway/internal/service/jwtService"
-	"ApiGateway/pkg/models"
+	"ApiGateway/pkg/models/cardNumber"
+	"ApiGateway/pkg/models/remittance"
+	"ApiGateway/pkg/models/transaction/reg"
+	"ApiGateway/pkg/models/transaction/request"
+	"ApiGateway/pkg/models/user"
+	"ApiGateway/pkg/models/user/response"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -21,10 +27,9 @@ func main() {
 		log.Println("No .env file found")
 	}
 	r := gin.Default()
-	var user models.User
+	var user user.User
 
 	r.POST("/register", func(c *gin.Context) {
-		var user models.User
 		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -36,8 +41,7 @@ func main() {
 			return
 		}
 
-		topic_init.InitTopic()
-		if err := producer.SendMessageInRegistretion("register", user); err != nil {
+		if err := producer_user.SendMessageInRegistretion("register", user); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -67,8 +71,7 @@ func main() {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
 
-		topic_init.InitTopic()
-		if err := producer.SendMessageAuth("server", user); err != nil {
+		if err := producer_user.SendMessageAuth("server", user); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 
@@ -93,12 +96,12 @@ func main() {
 	})
 
 	r.POST("/auth/cardNumber", func(c *gin.Context) {
-		var authCardNumber models.AuthCardNumber
+		var authCardNumber cardNumber.AuthCardNumber
 		if err := c.ShouldBindJSON(&authCardNumber); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
 
-		err := producer.SendMessageAuthCardNumber("auth-card-number", authCardNumber)
+		err := producer_auth_cardnumber.SendMessageAuthCardNumber("auth-card-number", authCardNumber)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 		}
@@ -121,7 +124,7 @@ func main() {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var userResp models.UserResponse
+		var userResp response.UserResponse
 		if err := json.Unmarshal(body, &userResp); err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -136,7 +139,7 @@ func main() {
 	r.POST("/payment/service/:name", func(c *gin.Context) {
 		name := c.Param("name")
 
-		var transaction models.TransactionRequest
+		var transaction request.TransactionRequest
 
 		if err := c.ShouldBindJSON(&transaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -146,10 +149,15 @@ func main() {
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 		}
+
+		c.JSON(200, gin.H{
+			"status":  200,
+			"message": "success",
+		})
 	})
 
 	r.POST("/payment/reg", func(c *gin.Context) {
-		var regTransaction models.RegTransaction
+		var regTransaction reg.RegTransaction
 
 		if err := c.ShouldBindJSON(&regTransaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -158,6 +166,24 @@ func main() {
 		err := service.TransactionReg(regTransaction)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
+		}
+
+		c.JSON(200, gin.H{
+			"status":  200,
+			"message": "success",
+		})
+	})
+
+	r.POST("/remittance", func(c *gin.Context) {
+		var remittanceTransaction remittance.RemittanceTransaction
+
+		if err := c.ShouldBindJSON(&remittanceTransaction); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		err := producer_user_remittance.SendMessageRemittance("create-remittance", remittanceTransaction)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
 		c.JSON(200, gin.H{

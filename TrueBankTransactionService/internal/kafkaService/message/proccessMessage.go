@@ -28,3 +28,14 @@ func ProcessMessageRegTransaction(data []byte) (requestModels.RegTransaction, er
 
 	return req, nil
 }
+
+func ProcessMessageRemittance(data []byte) (requestModels.RemittanceRequest, error) {
+	fmt.Println("Consumer started")
+
+	var req requestModels.RemittanceRequest
+	if err := json.Unmarshal(data, &req); err != nil {
+		log.Fatal(err)
+	}
+
+	return req, nil
+}

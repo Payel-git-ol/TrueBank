@@ -1,7 +1,7 @@
 package dbModels
 
 type ListTransaction struct {
-	Id                               string `json:"id" gorm:"primaryKey"`
+	ID                               uint   `gorm:"primaryKey;autoIncrement"`
 	Name                             string `json:"name"`
 	Description                      string `json:"description"`
 	Company                          string `json:"company"`

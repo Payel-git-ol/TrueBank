@@ -2,5 +2,5 @@ package models
 
 type AuthCardNumber struct {
 	Username   string `json:"username"`
-	CardNumber string `json:"number_card"`
+	CardNumber int    `json:"number_card"`
 }

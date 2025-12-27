@@ -14,6 +14,7 @@ func GetAuthCardNumber(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{"localhost:9092"},
 		Topic:   "auth-card-number",
+		GroupID: "get-auth-card-number",
 	})
 
 	defer r.Close()
@@ -27,11 +28,11 @@ func GetAuthCardNumber(wg *sync.WaitGroup) {
 		fmt.Printf("Message at offset %d: %s\n", len(m.Key), string(m.Value))
 		msg, err := message.ProcessMessageAuthCardNumber(m.Value)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 		fmt.Println(msg)
 
-		service.AuthCardNumber(msg.Username, msg.CardNumber)
+		service.AuthCardNumberInCache(msg.Username, msg.CardNumber)
 	}
 }

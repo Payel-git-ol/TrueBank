@@ -26,7 +26,9 @@ func InitDb() {
 		log.Fatal(err)
 	}
 
-	if err := Db.AutoMigrate(&dbModels.ListTransaction{}, &dbModels.HistoryTransaction{}); err != nil {
-		log.Fatalf("migration failed: %v", err)
+	if os.Getenv("RUN_MIGRATION") == "true" {
+		if err := Db.AutoMigrate(&dbModels.ListTransaction{}, &dbModels.HistoryTransaction{}, &dbModels.RemittanceHistory{}); err != nil {
+			log.Fatalf("migration failed: %v", err)
+		}
 	}
 }
