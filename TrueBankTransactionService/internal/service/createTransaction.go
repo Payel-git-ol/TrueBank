@@ -15,7 +15,7 @@ func CreateTransaction(newTransaction dbModels.HistoryTransaction) error {
 		return err
 	}
 
-	err = producer.SendMessageTransaction("result-transaction", sumFloat, newTransaction.NumberCard, newTransaction.Username)
+	err = producer.SendMessageTransaction("result-server", sumFloat, newTransaction.NumberCard, newTransaction.Username)
 	if err != nil {
 		return err
 	}

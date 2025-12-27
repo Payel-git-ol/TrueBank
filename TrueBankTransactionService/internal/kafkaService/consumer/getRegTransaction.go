@@ -14,8 +14,8 @@ import (
 func GetRegTransaction(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{"localhost:9092"},
-		Topic:   "transaction-reg",
-		GroupID: "get-reg-transaction",
+		Topic:   "server-reg",
+		GroupID: "get-reg-server",
 	})
 
 	defer r.Close()

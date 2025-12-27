@@ -3,7 +3,9 @@ package main
 import (
 	"ApiGateway/internal/grpc/auth"
 	"ApiGateway/internal/grpc/authpb"
+	"ApiGateway/internal/grpc/client"
 	"ApiGateway/internal/kafkaService/producer/producer_auth_cardnumber"
+	"ApiGateway/internal/kafkaService/producer/producer_transaction"
 	"ApiGateway/internal/kafkaService/producer/producer_user"
 	"ApiGateway/internal/kafkaService/producer/producer_user/producer_user_remittance"
 	"ApiGateway/internal/service"
@@ -156,6 +158,19 @@ func main() {
 		})
 	})
 
+	r.GET("/transactions", func(c *gin.Context) {
+		grpcClient := client.NewTransactionClient()
+
+		resp, err := client.CallGetAllTransactions(grpcClient)
+		if err != nil {
+			log.Println("GetAllTransactions error:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch transactions"})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp.Transactions)
+	})
+
 	r.POST("/payment/reg", func(c *gin.Context) {
 		var regTransaction reg.RegTransaction
 
@@ -190,6 +205,15 @@ func main() {
 			"status":  200,
 			"message": "success",
 		})
+	})
+
+	r.POST("/replenishment", func(c *gin.Context) {
+		var replenishment request.Replenishment
+		if err := c.ShouldBindJSON(&replenishment); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		producer_transaction.SendMessageReplenishment("replenishment", replenishment)
 	})
 
 	r.Run(":8080")

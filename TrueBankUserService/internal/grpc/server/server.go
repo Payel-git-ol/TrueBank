@@ -3,6 +3,7 @@ package server
 import (
 	"TrueBankUserService/internal/grpc/userservicepb"
 	"TrueBankUserService/internal/service"
+	"TrueBankUserService/pkg/database"
 	"TrueBankUserService/pkg/models"
 	"context"
 	"log"
@@ -25,6 +26,8 @@ func (s *UserServer) CreateUser(ctx context.Context, req *userservicepb.NewUserR
 	if err != nil {
 		log.Printf("Error saving user: %v", err)
 	}
+
+	database.Db.Create(&user)
 
 	return &userservicepb.NewUserResponse{
 		Status:  "Success",

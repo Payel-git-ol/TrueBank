@@ -7,7 +7,7 @@ option go_package = "internal/grpc/transactionpb;transactionpb";
 message GetAllTransactionsRequest {}
 
 message TransactionItem {
-  string id = 1;
+  uint32 id = 1;
   string name = 2;
   string description = 3;
   string company = 4;

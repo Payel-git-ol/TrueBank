@@ -14,7 +14,7 @@ func CreateTransaction(data request.TransactionRequest, nameTransaction string) 
 		NumberCard:      data.NumberCard,
 	}
 
-	err := producer_transaction.SendTransaction("create-transaction", transaction)
+	err := producer_transaction.SendTransaction("create-server", transaction)
 	if err != nil {
 		return err
 	}

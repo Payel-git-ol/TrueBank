@@ -18,7 +18,7 @@ func SendTransactionReg(topic string, data reg.RegTransaction) error {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Fatalf("Error marshalling transaction %v", err)
+		log.Fatalf("Error marshalling server %v", err)
 		return err
 	}
 

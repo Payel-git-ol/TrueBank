@@ -14,7 +14,7 @@ func TransactionReg(data reg.RegTransaction) error {
 		LinkToIndividualEntrepreneurship: data.LinkToIndividualEntrepreneurship,
 	}
 
-	err := producer_transaction.SendTransactionReg("transaction-reg", regTransaction)
+	err := producer_transaction.SendTransactionReg("server-reg", regTransaction)
 	if err != nil {
 		return err
 	}

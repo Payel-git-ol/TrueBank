@@ -47,15 +47,6 @@ func UpdateUserInCacheTransaction(CardNumber string, subtractAmount float64) err
 	return nil
 }
 
-func TestAddBalanceInCache(username string, amount float64) error {
-	err := cache.AddBalance(username, amount)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func UpdateUserInCacheRemittance(username string, SenderСardNumber string, GetterCardNumber string, amount float64) error {
 	err := cache.UpdateUserRemittance(username, SenderСardNumber, GetterCardNumber, amount)
 	if err != nil {

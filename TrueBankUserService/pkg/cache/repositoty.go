@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"TrueBankUserService/pkg/database"
 	"TrueBankUserService/pkg/models"
 	"context"
 	"encoding/json"
@@ -19,10 +20,25 @@ func SaveUser(user models.User) error {
 }
 
 func GetUser(username string) (*models.User, error) {
-	val, err := rdb.Get(ctx, username).Result()
-	if err != nil {
+	ctx := context.Background()
+	key := "user:" + username
+
+	val, err := rdb.Get(ctx, key).Result()
+	if err == redis.Nil {
+		// если нет в кэше — берём из БД
+		var user models.User
+		if err := database.Db.Where("username = ?", username).First(&user).Error; err != nil {
+			return nil, err
+		}
+
+		data, _ := json.Marshal(user)
+		_ = rdb.Set(ctx, key, data, time.Hour).Err()
+
+		return &user, nil
+	} else if err != nil {
 		return nil, err
 	}
+
 	var user models.User
 	if err := json.Unmarshal([]byte(val), &user); err != nil {
 		return nil, err
@@ -61,13 +77,13 @@ func AuthCardNumber(username string, cardNumber int) error {
 
 }
 
-func UpdateUserTransaction(username string, subtractAmount float64) error {
+func UpdateUserTransaction(username string, sum float64) error {
 	ctx := context.Background()
 	key := "user:" + username
 
 	val, err := rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
-		return errors.New("user not found")
+		return errors.New("user not found in cache")
 	} else if err != nil {
 		return err
 	}
@@ -77,104 +93,73 @@ func UpdateUserTransaction(username string, subtractAmount float64) error {
 		return err
 	}
 
-	user.Balance -= subtractAmount
+	user.Balance -= sum
 	if user.Balance < 0 {
-		return errors.New("user balance is negative")
+		return errors.New("insufficient funds")
 	}
 
-	data, err := json.Marshal(user)
+	data, _ := json.Marshal(user)
+	if err := rdb.Set(ctx, key, data, time.Hour).Err(); err != nil {
+		return err
+	}
+
+	if err := database.Db.Model(&models.User{}).
+		Where("username = ?", username).
+		Update("balance", user.Balance).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateUserRemittance(senderUsername, senderCardNumber, getterCardNumber string, amount float64) error {
+	ctx := context.Background()
+
+	senderVal, err := rdb.Get(ctx, "user:"+senderUsername).Result()
 	if err != nil {
 		return err
 	}
-
-	return rdb.Set(ctx, key, data, 24*time.Hour).Err()
-}
-
-func AddBalance(username string, amount float64) error {
-	ctx := context.Background()
-	key := "user:" + username
-
-	val, err := rdb.Get(ctx, key).Result()
-	if err == redis.Nil {
-		return errors.New("user not found")
-	} else if err != nil {
-		return err
-	}
-
-	var user models.User
-	if err := json.Unmarshal([]byte(val), &user); err != nil {
-		return err
-	}
-
-	user.Balance += amount
-
-	data, err := json.Marshal(user)
-	if err != nil {
-		return err
-	}
-
-	return rdb.Set(ctx, key, data, 24*time.Hour).Err()
-}
-
-func UpdateUserRemittance(senderUsername string, senderCardNumber string, getterCardNumber string, amount float64) error {
-	ctx := context.Background()
-
-	senderKey := "user:" + senderUsername
-	senderVal, err := rdb.Get(ctx, senderKey).Result()
-
-	if err == redis.Nil {
-		return errors.New("sender not found")
-	} else if err != nil {
-		return err
-	}
-
 	var sender models.User
-	if err := json.Unmarshal([]byte(senderVal), &sender); err != nil {
-		return err
-	}
+	_ = json.Unmarshal([]byte(senderVal), &sender)
 
 	if sender.CardNumber != senderCardNumber {
 		return errors.New("sender card mismatch")
 	}
 
 	getterUsername, err := rdb.Get(ctx, "card:"+getterCardNumber).Result()
-
-	if err == redis.Nil {
-		return errors.New("getter not found")
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
-
-	getterKey := "user:" + getterUsername
-	getterVal, err := rdb.Get(ctx, getterKey).Result()
-
-	if err == redis.Nil {
-		return errors.New("getter user not found")
-	} else if err != nil {
-		return err
-	}
-
+	getterVal, _ := rdb.Get(ctx, "user:"+getterUsername).Result()
 	var getter models.User
-	if err := json.Unmarshal([]byte(getterVal), &getter); err != nil {
-		return err
-	}
+	_ = json.Unmarshal([]byte(getterVal), &getter)
 
 	if sender.Balance < amount {
 		return errors.New("insufficient funds")
 	}
 
 	sender.Balance -= amount
-
 	getter.Balance += amount
 
 	senderData, _ := json.Marshal(sender)
 	getterData, _ := json.Marshal(getter)
 
 	pipe := rdb.TxPipeline()
-	pipe.Set(ctx, senderKey, senderData, 24*time.Hour)
-	pipe.Set(ctx, getterKey, getterData, 24*time.Hour)
+	pipe.Set(ctx, "user:"+senderUsername, senderData, time.Hour)
+	pipe.Set(ctx, "user:"+getterUsername, getterData, time.Hour)
 	_, err = pipe.Exec(ctx)
 	if err != nil {
+		return err
+	}
+
+	if err := database.Db.Model(&models.User{}).
+		Where("username = ?", senderUsername).
+		Update("balance", sender.Balance).Error; err != nil {
+		return err
+	}
+	if err := database.Db.Model(&models.User{}).
+		Where("username = ?", getterUsername).
+		Update("balance", getter.Balance).Error; err != nil {
 		return err
 	}
 

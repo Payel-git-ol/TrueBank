@@ -13,8 +13,8 @@ import (
 func GetResultTransaction(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{"localhost:9092"},
-		Topic:   "result-transaction",
-		GroupID: "get-res-transaction",
+		Topic:   "result-server",
+		GroupID: "get-res-server",
 	})
 
 	defer r.Close()

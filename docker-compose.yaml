@@ -38,7 +38,7 @@ services:
 
   postgres-transaction:
     image: postgres:15
-    container_name: postgres-server-transaction
+    container_name: postgres-server-server
     environment:
       POSTGRES_USER: true-server
       POSTGRES_PASSWORD: true123
@@ -47,6 +47,18 @@ services:
       - "5433:5432"
     volumes:
       - postgres_transaction:/var/lib/postgresql/data
+
+  postgres-users:
+    image: postgres:15
+    container_name: postgres-server-user
+    environment:
+      POSTGRES_USER: true-server
+      POSTGRES_PASSWORD: true123
+      POSTGRES_DB: true_db_user
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_user:/var/lib/postgresql/data
 
   redis:
     image: redis:7.2
@@ -71,4 +83,5 @@ services:
 volumes:
   postgres_auth:
   postgres_transaction:
+  postgres_user:
   redis_data:
