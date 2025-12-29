@@ -56,7 +56,7 @@ func (s *AuthServer) Authentication(ctx context.Context, req *authpb2.UserReques
 }
 
 func sendToUserService(user models.RequestUser) {
-	conn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
+	conn, err := grpc.Dial("user-service:50052", grpc.WithInsecure())
 	if err != nil {
 		log.Printf("failed to connect to UserService: %v", err)
 		return

@@ -1,0 +1,41 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  path_prefix: /tmp/loki
+
+compactor:
+  working_directory: /tmp/loki/compactor
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  filesystem:
+    directory: /tmp/loki/chunks
+
+limits_config:
+  allow_structured_metadata: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+  chunk_idle_period: 5m
+  max_chunk_age: 1h
+  chunk_target_size: 1048576
+
+memberlist:
+  join_members: []

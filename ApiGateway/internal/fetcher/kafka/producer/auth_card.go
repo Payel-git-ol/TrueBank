@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"ApiGateway/metrics"
 	"ApiGateway/pkg/model"
 	"context"
 	"encoding/json"
@@ -10,7 +11,7 @@ import (
 
 func SendMessageAuthCardNumber(topic string, data model.AuthCardNumber) error {
 	w := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   topic,
 	})
 
@@ -25,7 +26,7 @@ func SendMessageAuthCardNumber(topic string, data model.AuthCardNumber) error {
 		return err
 	}
 
-	//metrics.KafkaMessagesOut.Inc()
+	metrics.KafkaMessagesIn.Inc()
 
 	fmt.Printf("Отправлено в топик '%s': %v\n", topic, jsonData)
 	return nil

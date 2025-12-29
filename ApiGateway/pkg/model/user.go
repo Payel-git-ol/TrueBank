@@ -7,7 +7,3 @@ type User struct {
 	Balance  float64 `json:"balance"`
 	Role     string  `json:"role"`
 }
-
-type UserResponse struct {
-	User User `json:"User"`
-}

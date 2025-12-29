@@ -3,6 +3,7 @@ package consumer
 import (
 	"TrueBankUserService/internal/core/service"
 	"TrueBankUserService/internal/core/service/message"
+	"TrueBankUserService/metrics"
 	"context"
 	"fmt"
 	"github.com/segmentio/kafka-go"
@@ -12,7 +13,7 @@ import (
 
 func GetAuthCardNumber(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   "auth-card-number",
 		GroupID: "get-auth-card-number",
 	})
@@ -33,6 +34,10 @@ func GetAuthCardNumber(wg *sync.WaitGroup) {
 
 		fmt.Println(msg)
 
-		service.AuthCardNumberInCache(msg.Username, msg.CardNumber)
+		metrics.KafkaMessagesOut.Inc()
+
+		if err := service.AuthCardNumberInCache(msg.Username, msg.CardNumber); err != nil {
+			log.Println(err)
+		}
 	}
 }

@@ -3,6 +3,7 @@ package consumer
 import (
 	"TrueBankUserService/internal/core/service"
 	"TrueBankUserService/internal/core/service/message"
+	"TrueBankUserService/metrics"
 	"context"
 	"fmt"
 	"github.com/segmentio/kafka-go"
@@ -12,7 +13,7 @@ import (
 
 func GetResultRemittance(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   "result-remittance",
 		GroupID: "get-res-remittance",
 	})
@@ -31,6 +32,8 @@ func GetResultRemittance(wg *sync.WaitGroup) {
 		if err != nil {
 			log.Println(err)
 		}
+
+		metrics.KafkaMessagesOut.Inc()
 
 		if err := service.UpdateUserInCacheRemittance(resultMessage.Username, resultMessage.SenderСardNumber, resultMessage.GetterCardNumber, resultMessage.Sum); err != nil {
 			log.Println(err)

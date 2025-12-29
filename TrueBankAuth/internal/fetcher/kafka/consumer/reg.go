@@ -3,6 +3,7 @@ package consumer
 import (
 	"TrueBankAuth/internal/core/service"
 	"TrueBankAuth/internal/core/service/message"
+	"TrueBankAuth/metrics"
 	"context"
 	"fmt"
 	"github.com/segmentio/kafka-go"
@@ -12,7 +13,7 @@ import (
 
 func GetMessageReg(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   "register",
 		GroupID: "auth-reg-consumer",
 	})
@@ -31,6 +32,8 @@ func GetMessageReg(wg *sync.WaitGroup) {
 		}
 
 		fmt.Println(result)
+
+		metrics.KafkaMessagesOut.Inc()
 
 		service.RegService(result)
 	}

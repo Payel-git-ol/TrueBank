@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"TrueBankUserService/internal/core/service/message"
+	"TrueBankUserService/metrics"
 	"context"
 	"github.com/segmentio/kafka-go"
 	"log"
@@ -10,7 +11,7 @@ import (
 
 func GetMessageReplenishment(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   "replenishment",
 		GroupID: "group-replenishment",
 	})
@@ -22,6 +23,10 @@ func GetMessageReplenishment(wg *sync.WaitGroup) {
 		if err != nil {
 			log.Println(err)
 		}
+
+		metrics.KafkaMessagesOut.Inc()
+
+		metrics.KafkaMessagesOut.Inc()
 
 		message.ProcessMessageResultReplenishment(msg.Value)
 	}

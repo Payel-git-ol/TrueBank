@@ -2,12 +2,15 @@ package main
 
 import (
 	"TrueBankUserService/internal/core/service"
+	"TrueBankUserService/internal/fetcher/grpc/grpcinterceptor"
 	"TrueBankUserService/internal/fetcher/grpc/server"
 	"TrueBankUserService/internal/fetcher/grpc/userservicepb"
-	consumer2 "TrueBankUserService/internal/fetcher/kafka/consumer"
+	"TrueBankUserService/internal/fetcher/kafka/consumer"
+	"TrueBankUserService/metrics"
 	"TrueBankUserService/pkg/cache"
 	"TrueBankUserService/pkg/database"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -20,10 +23,10 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go consumer2.GetResultTransaction(&wg)
-	go consumer2.GetAuthCardNumber(&wg)
-	go consumer2.GetResultRemittance(&wg)
-	go consumer2.GetMessageReplenishment(&wg)
+	go consumer.GetResultTransaction(&wg)
+	go consumer.GetAuthCardNumber(&wg)
+	go consumer.GetResultRemittance(&wg)
+	go consumer.GetMessageReplenishment(&wg)
 
 	go func() {
 		lis, err := net.Listen("tcp", ":50052")
@@ -31,7 +34,9 @@ func main() {
 			log.Fatalf("failed to listen: %v", err)
 		}
 
-		grpcServer := grpc.NewServer()
+		grpcServer := grpc.NewServer(
+			grpc.UnaryInterceptor(grpcinterceptor.MetricsInterceptor()),
+		)
 		userservicepb.RegisterUserServiceServer(grpcServer, &server.UserServer{})
 
 		log.Println("UserService started on :50052")
@@ -63,6 +68,10 @@ func main() {
 			"User": cash,
 		})
 	})
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	metrics.Init()
 
 	r.Run(":5050")
 }

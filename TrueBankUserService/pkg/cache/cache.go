@@ -9,7 +9,7 @@ var Ctx = context.Background()
 var Rdb *redis.Client
 
 func InitRedis() {
-	rdb = redis.NewClient(&redis.Options{
+	Rdb = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,

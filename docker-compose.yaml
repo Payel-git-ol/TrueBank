@@ -1,4 +1,74 @@
 services:
+  api-gateway:
+    build: ./ApiGateway
+    container_name: truebank_api_gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - user-service
+      - transaction-service
+    env_file:
+      - ./ApiGateway/.env
+    networks:
+      - monitoring
+
+  auth-service:
+    build: ./TrueBankAuth
+    container_name: truebank_auth_service
+    ports:
+      - "7070:7070"
+      - "50051:50051"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    networks:
+      - monitoring
+    env_file:
+      - ./TrueBankAuth/.env
+    volumes:
+      - ./TrueBankAuth/.env:/app/.env
+
+
+  user-service:
+    build: ./TrueBankUserService
+    container_name: truebank_user_service
+    ports:
+      - "5050:5050"
+      - "50052:50052"
+    depends_on:
+      postgres-users:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+    networks:
+      - monitoring
+    env_file:
+      - ./TrueBankUserService/.env
+    volumes:
+      - ./TrueBankUserService/.env:/app/.env
+
+
+  transaction-service:
+    build: ./TrueBankTransactionService
+    container_name: truebank_transaction_service
+    ports:
+      - "6060:6060"
+      - "50053:50053"
+    depends_on:
+      postgres-transaction:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - monitoring
+    env_file:
+      - ./TrueBankTransactionService/.env
+    volumes:
+      - ./TrueBankTransactionService/.env:/app/.env
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: truebank_zookeeper
@@ -8,6 +78,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - monitoring
+
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -18,11 +91,16 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
       - "9092:9092"
+    networks:
+      - monitoring
+
 
   postgres-auth:
     image: postgres:15
@@ -35,6 +113,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_auth:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U true-server -d true_db_auth" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring
+
 
   postgres-transaction:
     image: postgres:15
@@ -47,6 +133,14 @@ services:
       - "5433:5432"
     volumes:
       - postgres_transaction:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U true-server -d true_db_transaction -h localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring
+
 
   postgres-users:
     image: postgres:15
@@ -59,6 +153,14 @@ services:
       - "5434:5432"
     volumes:
       - postgres_user:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U true-server -d true_db_user -h localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring
+
 
   redis:
     image: redis:7.2
@@ -69,15 +171,52 @@ services:
       - redis_data:/data
     restart: always
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+
+
+
+
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml
     ports:
-      - "1010:1010"
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "9000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-    depends_on:
-      - kafka
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitoring
+
+  loki:
+    image: grafana/loki:3.0.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./monitoring/loki-config.yaml:/etc/loki/loki-config.yaml
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    volumes:
+      - ./monitoring/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    networks:
+      - monitoring
 
 
 volumes:
@@ -85,3 +224,7 @@ volumes:
   postgres_transaction:
   postgres_user:
   redis_data:
+  grafana-data:
+
+networks:
+  monitoring:

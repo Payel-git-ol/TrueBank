@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"ApiGateway/metrics"
 	"ApiGateway/pkg/model"
 	"context"
 	"encoding/json"
@@ -10,7 +11,7 @@ import (
 
 func SendMessageInRegistretion(topic string, data model.User) error {
 	w := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   topic,
 	})
 
@@ -28,7 +29,7 @@ func SendMessageInRegistretion(topic string, data model.User) error {
 		panic(err)
 	}
 
-	//metrics.KafkaMessagesOut.Inc()
+	metrics.KafkaMessagesIn.Inc()
 
 	fmt.Printf("Отправлено в топик '%s': %v\n", topic, string(jsonData))
 	return nil

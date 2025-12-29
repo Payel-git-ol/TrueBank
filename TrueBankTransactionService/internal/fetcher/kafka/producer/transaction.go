@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"TrueBankTransactionService/metrics"
 	"TrueBankTransactionService/pkg/models/respons"
 	"context"
 	"encoding/json"
@@ -11,7 +12,7 @@ import (
 
 func SendMessageTransaction(topic string, sum float64, numberCard string, username string) error {
 	w := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   topic,
 	})
 
@@ -32,6 +33,8 @@ func SendMessageTransaction(topic string, sum float64, numberCard string, userna
 	err = w.WriteMessages(context.Background(), kafka.Message{
 		Value: jsonData,
 	})
+
+	metrics.KafkaMessagesIn.Inc()
 
 	fmt.Printf("Отправлено в топик '%s': %v\n", topic, data)
 	return nil

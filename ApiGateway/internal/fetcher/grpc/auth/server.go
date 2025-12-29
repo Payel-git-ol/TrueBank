@@ -8,7 +8,7 @@ import (
 )
 
 func NewAuthClient() authpb2.AuthServiceClient {
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	conn, err := grpc.Dial("auth-service:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}

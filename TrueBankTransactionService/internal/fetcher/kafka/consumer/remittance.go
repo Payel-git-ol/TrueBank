@@ -3,6 +3,7 @@ package consumer
 import (
 	"TrueBankTransactionService/internal/core/service"
 	"TrueBankTransactionService/internal/core/service/message"
+	"TrueBankTransactionService/metrics"
 	"TrueBankTransactionService/pkg/models"
 	"context"
 	"fmt"
@@ -14,7 +15,7 @@ import (
 
 func GetMessageRemittance(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   "create-remittance",
 		GroupID: "get-remittance",
 	})
@@ -40,6 +41,8 @@ func GetMessageRemittance(wg *sync.WaitGroup) {
 			Sum:              messageResult.Sum,
 			DataCreate:       time.Now(),
 		}
+
+		metrics.KafkaMessagesOut.Inc()
 
 		service.CreateRemittance(newRemittance)
 	}

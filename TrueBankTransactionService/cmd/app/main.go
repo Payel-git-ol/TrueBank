@@ -1,11 +1,14 @@
 package main
 
 import (
+	"TrueBankTransactionService/internal/fetcher/grpc/grpcinterceptor"
 	"TrueBankTransactionService/internal/fetcher/grpc/server"
 	"TrueBankTransactionService/internal/fetcher/grpc/transactionpb"
 	"TrueBankTransactionService/internal/fetcher/kafka/consumer"
+	"TrueBankTransactionService/metrics"
 	"TrueBankTransactionService/pkg/database"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
@@ -31,7 +34,9 @@ func main() {
 			log.Fatalf("failed to listen: %v", err)
 		}
 
-		grpcServer := grpc.NewServer()
+		grpcServer := grpc.NewServer(
+			grpc.UnaryInterceptor(grpcinterceptor.MetricsInterceptor()),
+		)
 		transactionpb.RegisterTransactionServiceServer(grpcServer, &server.TransactionServer{})
 		reflection.Register(grpcServer)
 		log.Println("TransactionService gRPC server started on :50053")
@@ -46,6 +51,10 @@ func main() {
 			"message": "hello world",
 		})
 	})
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	metrics.Init()
 
 	r.Run(":6060")
 }

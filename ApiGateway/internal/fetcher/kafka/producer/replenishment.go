@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"ApiGateway/metrics"
 	"ApiGateway/pkg/model/requests"
 	"context"
 	"encoding/json"
@@ -10,7 +11,7 @@ import (
 
 func SendMessageReplenishment(topic string, replenishment requests.Replenishment) error {
 	w := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   topic,
 	})
 
@@ -21,6 +22,8 @@ func SendMessageReplenishment(topic string, replenishment requests.Replenishment
 		log.Println(err)
 		return err
 	}
+
+	metrics.KafkaMessagesIn.Inc()
 
 	msg := w.WriteMessages(context.Background(), kafka.Message{Value: jsonData})
 	log.Println(msg)

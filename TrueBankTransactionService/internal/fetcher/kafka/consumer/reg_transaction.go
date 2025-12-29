@@ -3,6 +3,7 @@ package consumer
 import (
 	"TrueBankTransactionService/internal/core/service"
 	"TrueBankTransactionService/internal/core/service/message"
+	"TrueBankTransactionService/metrics"
 	"TrueBankTransactionService/pkg/models"
 	"context"
 	"fmt"
@@ -13,7 +14,7 @@ import (
 
 func GetRegTransaction(wg *sync.WaitGroup) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   "server-reg",
 		GroupID: "get-reg-server",
 	})
@@ -40,6 +41,8 @@ func GetRegTransaction(wg *sync.WaitGroup) {
 		}
 
 		service.SaveRegTransaction(newTransaction)
+
+		metrics.KafkaMessagesOut.Inc()
 
 		fmt.Println(processMessage)
 	}

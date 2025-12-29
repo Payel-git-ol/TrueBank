@@ -4,14 +4,16 @@ import (
 	"ApiGateway/internal/fetcher/grpc/auth"
 	"ApiGateway/internal/fetcher/grpc/authpb"
 	"ApiGateway/internal/fetcher/grpc/client"
-	producer2 "ApiGateway/internal/fetcher/kafka/producer"
+	"ApiGateway/internal/fetcher/kafka/producer"
 	"ApiGateway/internal/service"
 	"ApiGateway/internal/service/jwt"
+	"ApiGateway/metrics"
 	"ApiGateway/pkg/model"
 	"ApiGateway/pkg/model/requests"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -36,7 +38,7 @@ func main() {
 			return
 		}
 
-		if err := producer2.SendMessageInRegistretion("register", user); err != nil {
+		if err := producer.SendMessageInRegistretion("register", user); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -66,7 +68,7 @@ func main() {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
 
-		if err := producer2.SendMessageAuth("server", user); err != nil {
+		if err := producer.SendMessageAuth("server", user); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 
@@ -96,7 +98,7 @@ func main() {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
 
-		err := producer2.SendMessageAuthCardNumber("auth-card-number", authCardNumber)
+		err := producer.SendMessageAuthCardNumber("auth-card-number", authCardNumber)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 		}
@@ -189,7 +191,7 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		err := producer2.SendMessageRemittance("create-remittance", remittanceTransaction)
+		err := producer.SendMessageRemittance("create-remittance", remittanceTransaction)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
@@ -206,8 +208,12 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		producer2.SendMessageReplenishment("replenishment", replenishment)
+		producer.SendMessageReplenishment("replenishment", replenishment)
 	})
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	metrics.Init()
 
 	r.Run(":8080")
 }

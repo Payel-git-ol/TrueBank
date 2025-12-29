@@ -8,7 +8,7 @@ import (
 )
 
 func NewTransactionClient() transactionpb2.TransactionServiceClient {
-	conn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
+	conn, err := grpc.Dial("transaction-service:50053", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
