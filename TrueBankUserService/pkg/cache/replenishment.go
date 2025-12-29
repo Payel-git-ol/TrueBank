@@ -26,7 +26,7 @@ func ReplenishBalance(cardNumber string, sum float64) error {
 		return err
 	}
 
-	pipe := rdb.TxPipeline()
+	pipe := Rdb.TxPipeline()
 	pipe.Set(ctx, "user:"+user.Username, data, time.Hour) // TTL = 1 час
 	pipe.Set(ctx, "card:"+user.CardNumber, user.Username, time.Hour)
 	_, err = pipe.Exec(ctx)

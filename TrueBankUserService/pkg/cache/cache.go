@@ -5,8 +5,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var ctx = context.Background()
-var rdb *redis.Client
+var Ctx = context.Background()
+var Rdb *redis.Client
 
 func InitRedis() {
 	rdb = redis.NewClient(&redis.Options{

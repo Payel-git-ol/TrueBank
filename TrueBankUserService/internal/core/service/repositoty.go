@@ -17,23 +17,22 @@ func SaveUser(user models.User) error {
 	if err != nil {
 		return err
 	}
-	return cache.rdb.Set(cache.ctx, "user:"+user.Username, data, 30*24*time.Hour).Err()
+	return cache.Rdb.Set(cache.Ctx, "user:"+user.Username, data, 30*24*time.Hour).Err()
 }
 
 func GetUser(username string) (*models.User, error) {
 	ctx := context.Background()
 	key := "user:" + username
 
-	val, err := cache.rdb.Get(ctx, key).Result()
+	val, err := cache.Rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
-		// если нет в кэше — берём из БД
 		var user models.User
 		if err := database.Db.Where("username = ?", username).First(&user).Error; err != nil {
 			return nil, err
 		}
 
 		data, _ := json.Marshal(user)
-		_ = cache.rdb.Set(ctx, key, data, time.Hour).Err()
+		_ = cache.Rdb.Set(ctx, key, data, time.Hour).Err()
 
 		return &user, nil
 	} else if err != nil {
@@ -51,7 +50,7 @@ func AuthCardNumber(username string, cardNumber int) error {
 	ctx := context.Background()
 	key := "user:" + username
 
-	val, err := cache.rdb.Get(ctx, key).Result()
+	val, err := cache.Rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
 		return errors.New("user not found")
 	} else if err != nil {
@@ -70,7 +69,7 @@ func AuthCardNumber(username string, cardNumber int) error {
 		return err
 	}
 
-	pipe := cache.rdb.TxPipeline()
+	pipe := cache.Rdb.TxPipeline()
 	pipe.Set(ctx, key, data, 24*time.Hour)
 	pipe.Set(ctx, "card:"+strconv.Itoa(cardNumber), user.Username, 24*time.Hour)
 	_, err = pipe.Exec(ctx)
@@ -82,7 +81,7 @@ func UpdateUserTransaction(username string, sum float64) error {
 	ctx := context.Background()
 	key := "user:" + username
 
-	val, err := cache.rdb.Get(ctx, key).Result()
+	val, err := cache.Rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
 		return errors.New("user not found in cache")
 	} else if err != nil {
@@ -100,7 +99,7 @@ func UpdateUserTransaction(username string, sum float64) error {
 	}
 
 	data, _ := json.Marshal(user)
-	if err := cache.rdb.Set(ctx, key, data, time.Hour).Err(); err != nil {
+	if err := cache.Rdb.Set(ctx, key, data, time.Hour).Err(); err != nil {
 		return err
 	}
 
@@ -116,7 +115,7 @@ func UpdateUserTransaction(username string, sum float64) error {
 func UpdateUserRemittance(senderUsername, senderCardNumber, getterCardNumber string, amount float64) error {
 	ctx := context.Background()
 
-	senderVal, err := cache.rdb.Get(ctx, "user:"+senderUsername).Result()
+	senderVal, err := cache.Rdb.Get(ctx, "user:"+senderUsername).Result()
 	if err != nil {
 		return err
 	}
@@ -127,11 +126,11 @@ func UpdateUserRemittance(senderUsername, senderCardNumber, getterCardNumber str
 		return errors.New("sender card mismatch")
 	}
 
-	getterUsername, err := cache.rdb.Get(ctx, "card:"+getterCardNumber).Result()
+	getterUsername, err := cache.Rdb.Get(ctx, "card:"+getterCardNumber).Result()
 	if err != nil {
 		return err
 	}
-	getterVal, _ := cache.rdb.Get(ctx, "user:"+getterUsername).Result()
+	getterVal, _ := cache.Rdb.Get(ctx, "user:"+getterUsername).Result()
 	var getter models.User
 	_ = json.Unmarshal([]byte(getterVal), &getter)
 
@@ -145,7 +144,7 @@ func UpdateUserRemittance(senderUsername, senderCardNumber, getterCardNumber str
 	senderData, _ := json.Marshal(sender)
 	getterData, _ := json.Marshal(getter)
 
-	pipe := cache.rdb.TxPipeline()
+	pipe := cache.Rdb.TxPipeline()
 	pipe.Set(ctx, "user:"+senderUsername, senderData, time.Hour)
 	pipe.Set(ctx, "user:"+getterUsername, getterData, time.Hour)
 	_, err = pipe.Exec(ctx)
