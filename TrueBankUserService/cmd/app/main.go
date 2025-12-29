@@ -1,10 +1,10 @@
 package main
 
 import (
-	"TrueBankUserService/internal/grpc/server"
-	"TrueBankUserService/internal/grpc/userservicepb"
-	"TrueBankUserService/internal/kafka/consumer"
-	"TrueBankUserService/internal/service"
+	"TrueBankUserService/internal/core/service"
+	"TrueBankUserService/internal/fetcher/grpc/server"
+	"TrueBankUserService/internal/fetcher/grpc/userservicepb"
+	consumer2 "TrueBankUserService/internal/fetcher/kafka/consumer"
 	"TrueBankUserService/pkg/cache"
 	"TrueBankUserService/pkg/database"
 	"github.com/gin-gonic/gin"
@@ -20,10 +20,10 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go consumer.GetResultTransaction(&wg)
-	go consumer.GetAuthCardNumber(&wg)
-	go consumer.GetResultRemittance(&wg)
-	go consumer.GetMessageReplenishment(&wg)
+	go consumer2.GetResultTransaction(&wg)
+	go consumer2.GetAuthCardNumber(&wg)
+	go consumer2.GetResultRemittance(&wg)
+	go consumer2.GetMessageReplenishment(&wg)
 
 	go func() {
 		lis, err := net.Listen("tcp", ":50052")

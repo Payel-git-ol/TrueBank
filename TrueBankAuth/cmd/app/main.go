@@ -1,9 +1,9 @@
 package main
 
 import (
-	"TrueBankAuth/internal/grpc/authpb"
-	"TrueBankAuth/internal/grpc/server"
-	"TrueBankAuth/internal/kafka/consumer"
+	"TrueBankAuth/internal/fetcher/grpc/authpb"
+	"TrueBankAuth/internal/fetcher/grpc/server"
+	consumer2 "TrueBankAuth/internal/fetcher/kafka/consumer"
 	"TrueBankAuth/pkg/database"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
@@ -16,8 +16,8 @@ func main() {
 	database.InitDb()
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go consumer.GetMessageReg(&wg)
-	go consumer.GetMessageAuth(&wg)
+	go consumer2.GetMessageReg(&wg)
+	go consumer2.GetMessageAuth(&wg)
 	r := gin.Default()
 
 	go func() {

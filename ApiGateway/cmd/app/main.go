@@ -1,21 +1,14 @@
 package main
 
 import (
-	"ApiGateway/internal/grpc/auth"
-	"ApiGateway/internal/grpc/authpb"
-	"ApiGateway/internal/grpc/client"
-	"ApiGateway/internal/kafkaService/producer/producer_auth_cardnumber"
-	"ApiGateway/internal/kafkaService/producer/producer_transaction"
-	"ApiGateway/internal/kafkaService/producer/producer_user"
-	"ApiGateway/internal/kafkaService/producer/producer_user/producer_user_remittance"
+	"ApiGateway/internal/fetcher/grpc/auth"
+	"ApiGateway/internal/fetcher/grpc/authpb"
+	"ApiGateway/internal/fetcher/grpc/client"
+	producer2 "ApiGateway/internal/fetcher/kafka/producer"
 	"ApiGateway/internal/service"
-	"ApiGateway/internal/service/jwtService"
-	"ApiGateway/pkg/models/cardNumber"
-	"ApiGateway/pkg/models/remittance"
-	"ApiGateway/pkg/models/transaction/reg"
-	"ApiGateway/pkg/models/transaction/request"
-	"ApiGateway/pkg/models/user"
-	"ApiGateway/pkg/models/user/response"
+	"ApiGateway/internal/service/jwt"
+	"ApiGateway/pkg/model"
+	"ApiGateway/pkg/model/requests"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -29,7 +22,7 @@ func main() {
 		log.Println("No .env file found")
 	}
 	r := gin.Default()
-	var user user.User
+	var user model.User
 
 	r.POST("/register", func(c *gin.Context) {
 		if err := c.ShouldBindJSON(&user); err != nil {
@@ -37,13 +30,13 @@ func main() {
 			return
 		}
 
-		token, err := jwtService.UserServiceRegister(user)
+		token, err := jwt.UserServiceRegister(user)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := producer_user.SendMessageInRegistretion("register", user); err != nil {
+		if err := producer2.SendMessageInRegistretion("register", user); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -73,7 +66,7 @@ func main() {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
 
-		if err := producer_user.SendMessageAuth("server", user); err != nil {
+		if err := producer2.SendMessageAuth("server", user); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 
@@ -98,12 +91,12 @@ func main() {
 	})
 
 	r.POST("/auth/cardNumber", func(c *gin.Context) {
-		var authCardNumber cardNumber.AuthCardNumber
+		var authCardNumber model.AuthCardNumber
 		if err := c.ShouldBindJSON(&authCardNumber); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
 
-		err := producer_auth_cardnumber.SendMessageAuthCardNumber("auth-card-number", authCardNumber)
+		err := producer2.SendMessageAuthCardNumber("auth-card-number", authCardNumber)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 		}
@@ -126,7 +119,7 @@ func main() {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var userResp response.UserResponse
+		var userResp model.UserResponse
 		if err := json.Unmarshal(body, &userResp); err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -141,7 +134,7 @@ func main() {
 	r.POST("/payment/service/:name", func(c *gin.Context) {
 		name := c.Param("name")
 
-		var transaction request.TransactionRequest
+		var transaction requests.TransactionRequest
 
 		if err := c.ShouldBindJSON(&transaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -172,7 +165,7 @@ func main() {
 	})
 
 	r.POST("/payment/reg", func(c *gin.Context) {
-		var regTransaction reg.RegTransaction
+		var regTransaction model.RegTransaction
 
 		if err := c.ShouldBindJSON(&regTransaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -190,13 +183,13 @@ func main() {
 	})
 
 	r.POST("/remittance", func(c *gin.Context) {
-		var remittanceTransaction remittance.RemittanceTransaction
+		var remittanceTransaction model.RemittanceTransaction
 
 		if err := c.ShouldBindJSON(&remittanceTransaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		err := producer_user_remittance.SendMessageRemittance("create-remittance", remittanceTransaction)
+		err := producer2.SendMessageRemittance("create-remittance", remittanceTransaction)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
@@ -208,12 +201,12 @@ func main() {
 	})
 
 	r.POST("/replenishment", func(c *gin.Context) {
-		var replenishment request.Replenishment
+		var replenishment requests.Replenishment
 		if err := c.ShouldBindJSON(&replenishment); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		producer_transaction.SendMessageReplenishment("replenishment", replenishment)
+		producer2.SendMessageReplenishment("replenishment", replenishment)
 	})
 
 	r.Run(":8080")

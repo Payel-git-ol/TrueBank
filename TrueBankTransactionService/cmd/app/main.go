@@ -1,9 +1,9 @@
 package main
 
 import (
-	"TrueBankTransactionService/internal/grpc/server"
-	"TrueBankTransactionService/internal/grpc/transactionpb"
-	"TrueBankTransactionService/internal/kafkaService/consumer"
+	"TrueBankTransactionService/internal/fetcher/grpc/server"
+	"TrueBankTransactionService/internal/fetcher/grpc/transactionpb"
+	consumer2 "TrueBankTransactionService/internal/fetcher/kafka/consumer"
 	"TrueBankTransactionService/pkg/database"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
@@ -20,9 +20,9 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go consumer.GetTransaction(&wg)
-	go consumer.GetRegTransaction(&wg)
-	go consumer.GetMessageRemittance(&wg)
+	go consumer2.GetTransaction(&wg)
+	go consumer2.GetRegTransaction(&wg)
+	go consumer2.GetMessageRemittance(&wg)
 
 	go func() {
 		lis, err := net.Listen("tcp", ":50053")

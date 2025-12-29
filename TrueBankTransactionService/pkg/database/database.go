@@ -1,7 +1,7 @@
 package database
 
 import (
-	"TrueBankTransactionService/pkg/models/dbModels"
+	"TrueBankTransactionService/pkg/models"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -27,7 +27,7 @@ func InitDb() {
 	}
 
 	if os.Getenv("RUN_MIGRATION") == "true" {
-		if err := Db.AutoMigrate(&dbModels.ListTransaction{}, &dbModels.HistoryTransaction{}, &dbModels.RemittanceHistory{}); err != nil {
+		if err := Db.AutoMigrate(&models.ListTransaction{}, &models.HistoryTransaction{}, &models.RemittanceHistory{}); err != nil {
 			log.Fatalf("migration failed: %v", err)
 		}
 	}
