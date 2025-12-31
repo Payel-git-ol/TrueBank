@@ -1,0 +1,40 @@
+stages:
+  - build
+  - docker
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+before_script:
+  - echo "Starting pipeline for $CI_PROJECT_NAME"
+
+build:
+  stage: build
+  image: golang:1.21
+  script:
+    - go mod tidy
+    - go test ./...
+    - go build -o app ./cmd
+  artifacts:
+    paths:
+      - app
+
+docker-build:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl config use-context minikube
+    - kubectl set image deployment/user-service truebank-user-service=$IMAGE_TAG
+    - kubectl rollout status deployment/user-service
