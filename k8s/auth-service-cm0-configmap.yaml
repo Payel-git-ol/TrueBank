@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-env
+  labels:
+    app: auth-service
+data:
+  DB_HOST: "postgres-auth"
+  DB_PORT: "5432"
+  DB_NAME: "true_db_auth"
+  RUN_MIGRATION: "true"

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\pasaz\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert -f docker-compose.yaml
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: loki
+  name: loki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: loki
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\pasaz\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert -f docker-compose.yaml
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: loki
+    spec:
+      containers:
+        - args:
+            - -config.file=/etc/loki/loki-config.yaml
+          image: grafana/loki:3.0.0
+          name: loki
+          ports:
+            - containerPort: 3100
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/loki/loki-config.yaml
+              name: loki-cm0
+              subPath: loki-config.yaml
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: loki-config.yaml
+                path: loki-config.yaml
+            name: loki-cm0
+          name: loki-cm0

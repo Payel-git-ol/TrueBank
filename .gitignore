@@ -1,0 +1,7 @@
+.idea
+./ApiGateway/.env
+./TrueBankAuth/.env
+./TrueBankUserService/.env
+./TrueBankTransactionService/.env
+
+./k8s/secrets

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-env
+  labels:
+    app: user-service
+data:
+  DB_DNS: "host=postgres-users user=true-server password=true123 dbname=true_db_user port=5432 sslmode=disable"
+  RUN_MIGRATION: "true"

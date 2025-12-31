@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  .env: |-
+    DB_DNS=host=postgres-transaction user=true-server password=true123 dbname=true_db_transaction port=5432 sslmode=disable
+    RUN_MIGRATION=true
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: transaction-service
+  name: transaction-service-cm0

@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  DB_DNS: "host=postgres-auth user=true-server password=true123 dbname=true_db_auth port=5432 sslmode=disable"
+  RUN_MIGRATION: "true"
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: auth-service-true-bank-auth--env
+  name: true-bank-auth-env

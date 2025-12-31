@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: postgres-users
+  name: postgres-users
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: postgres-users
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: postgres-users
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: true_db_user
+            - name: POSTGRES_PASSWORD
+              value: true123
+            - name: POSTGRES_USER
+              value: true-server
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+          image: postgres:15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - /usr/bin/pg_isready
+                - -U
+                - true-server
+                - -d
+                - true_db_user
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /usr/bin/pg_isready
+                - -U
+                - true-server
+                - -d
+                - true_db_user
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 30
+          name: postgres-server-users
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-user
+      restartPolicy: Always
+      volumes:
+        - name: postgres-user
+          persistentVolumeClaim:
+            claimName: postgres-user
+

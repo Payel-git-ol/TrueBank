@@ -11,12 +11,14 @@ import (
 	"ApiGateway/pkg/model"
 	"ApiGateway/pkg/model/requests"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -25,6 +27,17 @@ func main() {
 	}
 	r := gin.Default()
 	var user model.User
+
+	userServiceURL := os.Getenv("USER_SERVICE_URL")
+	if userServiceURL == "" {
+		userServiceURL = "http://user-service:5050"
+	}
+	transactionServiceURL := os.Getenv("TRANSACTION_SERVICE_URL")
+	if transactionServiceURL == "" {
+		transactionServiceURL = "http://transaction-service:6060"
+	}
+	log.Println("USER_SERVICE_URL:", userServiceURL)
+	log.Println("TRANSACTION_SERVICE_URL:", transactionServiceURL)
 
 	r.POST("/register", func(c *gin.Context) {
 		if err := c.ShouldBindJSON(&user); err != nil {
@@ -112,7 +125,7 @@ func main() {
 	r.GET("/profile/:username", func(c *gin.Context) {
 		username := c.Param("username")
 
-		resp, err := http.Get("http://localhost:5050/search/profile/user/" + username)
+		resp, err := http.Get(userServiceURL + "/search/profile/user/" + username)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\pasaz\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert -f docker-compose.yaml
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: postgres-transaction
+  name: postgres-transaction
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: postgres-transaction
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\pasaz\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert -f docker-compose.yaml
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: postgres-transaction
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: true_db_transaction
+            - name: POSTGRES_PASSWORD
+              value: true123
+            - name: POSTGRES_USER
+              value: true-server
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+          image: postgres:15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - /usr/bin/pg_isready
+                - -U
+                - true-server
+                - -d
+                - true_db_transaction
+                - -h
+                - localhost
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /usr/bin/pg_isready
+                - -U
+                - true-server
+                - -d
+                - true_db_transaction
+                - -h
+                - localhost
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 30
+          name: postgres-server-transaction
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-transaction
+      restartPolicy: Always
+      volumes:
+        - name: postgres-transaction
+          persistentVolumeClaim:
+            claimName: postgres-transaction

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\pasaz\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert -f docker-compose.yaml
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: transaction-service
+  name: transaction-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: transaction-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\pasaz\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert -f docker-compose.yaml
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: transaction-service
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:15
+          command:
+            - sh
+            - -c
+            - |
+              until /usr/bin/pg_isready -h postgres-transaction -p 5432 -U true-server; do
+                echo "Waiting for postgres-transaction to be ready..."
+                sleep 2
+              done
+              echo "postgres-transaction is ready!"
+        - name: wait-for-kafka
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z kafka 9092; do
+                echo "Waiting for kafka to be ready..."
+                sleep 2
+              done
+              echo "kafka is ready!"
+      containers:
+        - envFrom:
+            - configMapRef:
+                name: transaction-service-env
+          image: truebank-transaction-service:latest
+          imagePullPolicy: IfNotPresent
+          name: truebank-transaction-service
+          ports:
+            - containerPort: 6060
+              protocol: TCP
+            - containerPort: 50053
+              protocol: TCP
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      restartPolicy: Always
